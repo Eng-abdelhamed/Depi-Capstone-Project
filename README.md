@@ -4,7 +4,7 @@ This repository contains the source code, deployment manifests, and infrastructu
 
 ## Architecture
 
-![Architecture Diagram](.Architechtures_pictures/Architechture.png)
+![Architecture Diagram] (Architechtures_pictures/Architechture.png)
 
 ## Components
 
