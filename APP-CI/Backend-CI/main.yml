@@ -1,0 +1,13 @@
+script: |
+            cd ${{ secrets.EC2_PATH }}
+            git pull origin master
+            
+            # استخدام ci بدل install لأنه أسرع وأخف
+            npm ci --production 
+            
+            # لو الـ Build ضروري، بنحدد للـ Node إنه ميستهلكش رامات أكتر من المتاح
+            NODE_OPTIONS="--max-old-space-size=512" npm run build
+            
+            # بدلاً من المسح، نستخدم reload أو restart لضمان الثبات
+            pm2 restart graduation-app || pm2 start dist/main.js --name graduation-app
+            pm2 save
