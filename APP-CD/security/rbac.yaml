@@ -1,11 +1,4 @@
-# rbac.yaml
-# Baseline RBAC for the cluster. Adjust the subject names/groups to match
-# whatever identity you actually use (IAM-mapped groups via aws-auth, GitHub
-# OIDC group, or plain ServiceAccounts) before applying.
 
----
-# 1) Cluster-wide read-only role, for anyone who needs to look around
-#    (debugging, demo, teammates) without being able to change anything.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -21,7 +14,6 @@ kind: ClusterRoleBinding
 metadata:
   name: read-only-viewer-binding
 subjects:
-  # replace with your team's actual IAM-mapped group name from aws-auth ConfigMap
   - kind: Group
     name: team-viewers
     apiGroup: rbac.authorization.k8s.io
@@ -31,9 +23,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
-# 2) Per-namespace admin role for app namespaces, scoped only to that
-#    namespace (least privilege - no cluster-wide power). Useful for
-#    debugging a specific app without touching others.
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -82,20 +72,3 @@ roleRef:
   kind: Role
   name: namespace-admin
   apiGroup: rbac.authorization.k8s.io
-
----
-# Note: there is intentionally no "database" namespace/Role here anymore.
-# MongoDB moved to Atlas (fully managed, outside the cluster), so there's no
-# in-cluster StatefulSet/PVC/Secret for it to protect. Access control for the
-# database now lives in the Atlas project itself (database users, Network
-# Access List / Private Endpoint) - see security-checklist.md.
-
----
-# CI note: because deployment is pull-based GitOps (Argo CD polls the
-# gitops repo and applies changes itself), the CI pipeline does NOT need a
-# kubeconfig or any cluster RBAC at all. GitHub Actions runs on GitHub's own
-# ephemeral SaaS runners and only needs: push access to Docker Hub, and a
-# GitHub token (repo scope) to commit the new image tag into the gitops
-# repo. Never give a GitHub Actions workflow a cluster ServiceAccount token
-# unless a real requirement shows up - keep the CI runner outside the
-# cluster's trust boundary entirely.
