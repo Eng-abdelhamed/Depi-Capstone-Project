@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1aplpha1
+kind: Application
+metadata:
+  name: argocd-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/Filopateer-Shaker/Deploy-Cart.git'
+    path: argocd
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: default
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true

@@ -1,0 +1,152 @@
+# network-policy.yaml
+# Default-deny per app namespace, then explicit allow rules matching the
+# real traffic path: ALB -> ingress -> frontend -> backend -> mongodb.
+# Apply after the namespaces exist (Worker 3's namespaces.yaml).
+
+---
+# ---------- frontend namespace ----------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: frontend
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: frontend
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-alb
+  namespace: frontend
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress"]
+  ingress:
+    # Traffic from the ALB/ingress controller. If using the AWS Load Balancer
+    # Controller with instance/IP target mode, ALB talks to pods directly -
+    # in that case relax this to allow from 0.0.0.0/0 on the app port instead
+    # of a namespaceSelector, since there's no in-cluster ingress-controller
+    # pod in the path.
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: ingress-nginx } }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-backend
+  namespace: frontend
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: backend } }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-monitoring
+  namespace: frontend
+spec:
+  # lets Prometheus scrape the frontend's /metrics endpoint (see
+  # monitoring/servicemonitors/frontend.yaml) - without this, default-deny-all
+  # above silently blocks the scrape and the frontend ServiceMonitor target
+  # just shows up "down" in Prometheus with no obvious reason why.
+  podSelector: {}
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: monitoring } }
+
+---
+# ---------- backend namespace ----------
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: backend
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: backend
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-frontend
+  namespace: backend
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: frontend } }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-from-monitoring
+  namespace: backend
+spec:
+  # lets Prometheus scrape the backend's /metrics endpoint
+  podSelector: {}
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: monitoring } }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-to-mongodb-atlas
+  namespace: backend
+spec:
+  # MongoDB Atlas is external and resolves to Atlas-managed IPs that change
+  # over time (unless you're on Private Endpoint/PrivateLink), so a
+  # NetworkPolicy can't pin it to a fixed CIDR the way it could for an
+  # in-cluster Service. This just opens egress on the MongoDB port; the real
+  # access control for Atlas lives on the Atlas side - see the Network
+  # Access List note in security-checklist.md.
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - ipBlock: { cidr: 0.0.0.0/0 }
+      ports:
+        - { protocol: TCP, port: 27017 }
+
+# Note: there is intentionally no "database" namespace section below anymore.
+# MongoDB now runs on Atlas, fully outside the cluster and outside this VPC's
+# NetworkPolicy scope. Make sure Atlas's Network Access List includes
+# whatever public IP the EKS nodes egress through (the node's public IP if
+# no NAT Gateway, per the project's cost rules).

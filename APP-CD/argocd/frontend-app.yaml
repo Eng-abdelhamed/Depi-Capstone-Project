@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: deploycart-frontend
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: "frontend=797601397904.dkr.ecr.us-east-1.amazonaws.com/frontend"
+    argocd-image-updater.argoproj.io/frontend.update-strategy: "semver"
+    argocd-image-updater.argoproj.io/frontend.allow-tags: 'regexp:^v[0-9]+\.[0-9]+\.[0-9]+$'
+    argocd-image-updater.argoproj.io/frontend.helm.image-name: "image.repository"
+    argocd-image-updater.argoproj.io/frontend.helm.image-tag: "image.tag"
+    argocd-image-updater.argoproj.io/frontend.force-update: "true"
+    argocd-image-updater.argoproj.io/write-back-method: "argocd"
+
+spec:
+  project: default
+
+  source:
+    repoURL: "https://github.com/Filopateer-Shaker/Deploy-Cart.git"
+    targetRevision: main
+    path: helm/frontend
+    helm:
+      releaseName: frontend
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: image.repository
+          value: "797601397904.dkr.ecr.us-east-1.amazonaws.com/frontend"
+        - name: image.tag
+          value: "v0.0.53"
+        - name: ingress.enabled
+          value: "true"
+        - name: ingress.className
+          value: "nginx"
+        - name: ingress.path
+          value: "/"
+        - name: ingress.pathType
+          value: "Prefix"
+        - name: autoscaling.enabled
+          value: "false"
+
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: frontend
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

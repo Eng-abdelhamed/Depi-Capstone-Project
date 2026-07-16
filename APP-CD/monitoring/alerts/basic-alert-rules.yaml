@@ -1,0 +1,137 @@
+# basic-alert-rules.yaml
+# PrometheusRule CRD, picked up automatically by kube-prometheus-stack because
+# ruleSelectorNilUsesHelmValues is set to false in prometheus-values.yaml.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: basic-alert-rules
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: node.rules
+      rules:
+        - alert: NodeNotReady
+          expr: kube_node_status_condition{condition="Ready", status="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node {{ $labels.node }} is not Ready"
+            description: "Node {{ $labels.node }} has been NotReady for more than 5 minutes."
+
+        - alert: NodeHighCPU
+          expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage on {{ $labels.instance }}"
+            description: "CPU usage has been above 85% for 10 minutes on {{ $labels.instance }}."
+
+        - alert: NodeHighMemory
+          expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on {{ $labels.instance }}"
+            description: "Memory usage has been above 85% for 10 minutes on {{ $labels.instance }}."
+
+    - name: pod.rules
+      rules:
+        - alert: PodCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash-looping"
+            description: "Container {{ $labels.container }} restarted more than 3 times in the last 15 minutes."
+
+        - alert: PodNotReady
+          expr: kube_pod_status_ready{condition="true"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} not Ready"
+            description: "Pod has not reached Ready state for 10 minutes."
+
+        - alert: PodPending
+          expr: kube_pod_status_phase{phase="Pending"} == 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} stuck Pending"
+            description: "Check node capacity, PVC binding, or an ImagePullBackOff."
+
+    - name: application.rules
+      rules:
+        - alert: FrontendDown
+          expr: up{namespace="frontend"} == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Frontend target down"
+            description: "Frontend has been unreachable by Prometheus for 3 minutes."
+
+        - alert: BackendDown
+          expr: up{namespace="backend"} == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend target down"
+            description: "Backend has been unreachable by Prometheus for 3 minutes."
+
+        # MongoDB itself is now Atlas (fully managed, outside the cluster),
+        # so there's no in-cluster pod/namespace to run an `up{}` check
+        # against. Atlas has its own built-in alerting (connections, CPU,
+        # disk, replication lag) - enable that in the Atlas project UI
+        # instead of duplicating it here.
+        #
+        # No blackbox-exporter in this project (see Decisions Made), so
+        # health is inferred from kube-state-metrics instead of a synthetic
+        # probe: are the Deployments actually reporting available replicas.
+
+        - alert: FrontendDeploymentReplicasUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="frontend", deployment="frontend"} == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Frontend deployment has zero available replicas"
+            description: "The frontend Deployment has had 0 available replicas for 3 minutes."
+
+        - alert: BackendDeploymentReplicasUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="backend", deployment="backend"} == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend deployment has zero available replicas"
+            description: "The backend Deployment has had 0 available replicas for 3 minutes - often follows a crash loop or a failed rollout, possibly caused by losing its MongoDB Atlas connection on startup."
+
+    - name: argocd.rules
+      rules:
+        - alert: ArgoCDAppOutOfSync
+          expr: argocd_app_info{sync_status!="Synced"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Argo CD app {{ $labels.name }} is OutOfSync"
+            description: "{{ $labels.name }} has been OutOfSync for 15 minutes - a GitHub Actions build likely updated the gitops repo but the sync hasn't completed or failed."
+
+        - alert: ArgoCDAppUnhealthy
+          expr: argocd_app_info{health_status!="Healthy"} == 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Argo CD app {{ $labels.name }} is unhealthy"
+            description: "{{ $labels.name }} health status has been {{ $labels.health_status }} for 10 minutes."
