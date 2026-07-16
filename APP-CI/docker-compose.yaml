@@ -1,0 +1,28 @@
+# version: '3.8'
+
+services:
+  backend:
+    imgae: enabdelhamed/backenddepi:v1
+    container_name: depi-grad_backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    networks:
+      - depigrad-network
+    restart: unless-stopped
+
+  frontend:
+    image: enabdelhamed/depi-front:v1
+    container_name: depi-grad_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - depigrad-network
+    restart: unless-stopped
+
+networks:
+  depigrad-network:
+    driver: bridge
