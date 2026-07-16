@@ -1,0 +1,275 @@
+name: App CI
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+      security-events: write
+
+    env:
+      IMAGE_VERSION: v0.0.${{ github.run_number }}
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: npm
+
+
+      - name: Install Dependencies
+        run: npm ci
+
+
+      # -------------------------
+      # Phase 4 - Lint
+      # -------------------------
+      - name: Run Lint
+        continue-on-error: true  
+        run: npm run lint:ci
+
+
+      # -------------------------
+      # Phase 6 - Dependency Scan
+      # -------------------------
+      - name: Generate npm Audit Report
+        run: |
+          npm audit --json > audit-report.json || true
+
+
+      - name: Upload Audit Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: audit-report.json
+
+
+      - name: Fail on Critical Vulnerabilities
+        run: npm audit --audit-level=critical
+
+
+
+      # Phase 7 - Unit Tests + Coverage
+      # -------------------------
+      - name: Run Unit Tests with Coverage
+        continue-on-error: true  
+
+        run: npm run test:ci
+
+      - name: Check for lcov.info
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            echo "lcov.info found!"
+          else
+            echo "lcov.info NOT found. Listing directory:"
+            ls -R coverage
+          fi
+
+      - name: Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-report
+          path: coverage/
+
+      # -------------------------
+      # Phase 8 - SonarCloud Analysis
+      # -------------------------
+      - name: SonarCloud Scan
+        continue-on-error: true  
+
+        uses: SonarSource/sonarqube-scan-action@v6
+        with:
+          args: >
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+
+
+      - name: SonarCloud Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 5
+        continue-on-error: true   # مؤقت - عشان مشروع التخرج
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+
+
+      # -------------------------
+      # Phase 9 - Docker Build
+      # -------------------------
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: frontend:${{ env.IMAGE_VERSION }}
+
+      # -------------------------
+      # Phase 10 - SBOM
+      # -------------------------
+
+      - name: Install Syft
+        continue-on-error: true
+        uses: anchore/sbom-action/download-syft@v0
+
+      - name: Generate SBOM
+        run: |
+          syft docker:frontend:${{ env.IMAGE_VERSION }} \
+            -o spdx-json=frontend-sbom.spdx.json
+
+      - name: Upload Frontend SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-sbom
+          path: frontend-sbom.spdx.json
+
+
+      # -------------------------
+      # Phase 11 - Trivy Scan
+      # -------------------------
+
+      - name: Scan Docker Image with Trivy
+        continue-on-error: true  
+
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: frontend:${{ env.IMAGE_VERSION }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: 1
+
+      # -------------------------
+      # Phase 12 - Upload SARIF
+      # -------------------------
+
+      - name: Upload Trivy SARIF Report
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Upload Trivy Report Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-trivy-report
+          path: trivy-results.sarif
+
+      # -------------------------
+      # Phase 13 - Install Cosign
+      # -------------------------
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      # -------------------------
+      # Phase 14 - Configure AWS
+      # -------------------------
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ECR_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image
+        id: build-image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ env.IMAGE_VERSION }}
+
+      # -------------------------
+      # Debug GitHub OIDC Token
+      # -------------------------
+
+      - name: Check GitHub OIDC Token
+        run: |
+          echo "===== OIDC REQUEST URL ====="
+          echo "$ACTIONS_ID_TOKEN_REQUEST_URL"
+
+          echo ""
+          echo "===== OIDC REQUEST TOKEN ====="
+          if [ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+            echo "Token exists ✅"
+          else
+            echo "Token missing ❌"
+            exit 1
+          fi
+
+          echo ""
+          echo "===== OIDC RESPONSE ====="
+          curl -s \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sigstore"
+
+      # -------------------------
+      # Phase 15 - Sign Image
+      # -------------------------
+      - name: Check Cosign Version
+        run: cosign version
+
+
+      - name: Sign Docker Image
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign sign --yes \
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ env.IMAGE_VERSION }}
+
+      # -------------------------
+      # Phase 16 - Verify Signature
+      # -------------------------
+
+      - name: Verify Docker Image Signature
+        run: |
+          cosign verify \
+            --certificate-identity "https://github.com/${{ github.repository }}/.github/workflows/app-ci.yml@refs/heads/main" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ env.IMAGE_VERSION }}

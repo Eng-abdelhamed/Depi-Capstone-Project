@@ -1,0 +1,52 @@
+name: Debug GitHub OIDC & Cosign
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Check Cosign Version
+        run: cosign version
+
+      - name: Check GitHub OIDC Environment
+        run: |
+          echo "===== OIDC REQUEST URL ====="
+          echo "$ACTIONS_ID_TOKEN_REQUEST_URL"
+
+          echo ""
+          echo "===== OIDC REQUEST TOKEN ====="
+          if [ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+            echo "✅ Token exists"
+          else
+            echo "❌ Token missing"
+            exit 1
+          fi
+
+      - name: Request GitHub OIDC Token
+        run: |
+          echo "===== OIDC RESPONSE ====="
+
+          RESPONSE=$(curl -s \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sigstore")
+
+          echo "$RESPONSE"
+
+      - name: Test Cosign Identity
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign initialize
