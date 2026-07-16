@@ -1,0 +1,99 @@
+
+fullnameOverride: kube-prometheus-stack
+
+prometheus:
+  prometheusSpec:
+    replicas: 1
+    retention: 3d
+    retentionSize: "3GB"
+    resources:
+      requests:
+        cpu: 75m
+        memory: 300Mi
+      limits:
+        cpu: 300m
+        memory: 500Mi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp3
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 8Gi
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+  service:
+    type: ClusterIP
+
+alertmanager:
+  alertmanagerSpec:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+  config:
+    route:
+      receiver: "null"
+      group_by: ["alertname", "namespace"]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 3h
+    receivers:
+      - name: "null"
+
+  service:
+    type: ClusterIP
+
+grafana:
+  enabled: true
+  replicas: 1
+  adminPassword: ""
+  defaultDashboardsEnabled: true
+  resources:
+    requests:
+      cpu: 30m
+      memory: 96Mi
+    limits:
+      cpu: 150m
+      memory: 192Mi
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClassName: gp3
+  service:
+    type: ClusterIP
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL
+      folderAnnotation: grafana_folder
+      provider:
+        foldersFromFilesStructure: true
+    datasources:
+      enabled: true
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s/grafana"
+      serve_from_sub_path: true
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+defaultRules:
+  create: true
+  rules:
+    kubeApiserverAvailability: false
+    kubeApiserverSlos: false
+    etcd: false
+    kubeScheduler: false
+    kubeControllerManager: false

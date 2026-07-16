@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: application-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  application-dashboard.json: |
+    {
+      "title": "Application Availability",
+      "uid": "app-availability",
+      "schemaVersion": 39,
+      "version": 1,
+      "timezone": "browser",
+      "time": { "from": "now-6h", "to": "now" },
+      "refresh": "30s",
+      "tags": ["application", "availability", "worker4"],
+      "panels": [
+        {
+          "id": 1,
+          "title": "Frontend Up",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+          "targets": [{ "expr": "up{namespace=\"frontend\"}" }],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" } } },
+                { "type": "value", "options": { "1": { "text": "UP", "color": "green" } } }
+              ]
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "Backend Up",
+          "type": "stat",
+          "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+          "targets": [{ "expr": "up{namespace=\"backend\"}" }],
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" } } },
+                { "type": "value", "options": { "1": { "text": "UP", "color": "green" } } }
+              ]
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "MongoDB Atlas Status",
+          "type": "text",
+          "gridPos": { "h": 6, "w": 8, "x": 16, "y": 0 },
+          "options": {
+            "mode": "markdown",
+            "content": "MongoDB Atlas is fully managed and external to the cluster - it has its own metrics/alerting in the Atlas project UI, not Prometheus. Use `BackendUnhealthy` in basic-alert-rules.yaml as a proxy signal if the backend loses its DB connection."
+          }
+        },
+        {
+          "id": 4,
+          "title": "App Pod Restarts (last 1h)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "targets": [
+            {
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=~\"frontend|backend\"}[1h])) by (namespace, pod)",
+              "legendFormat": "{{namespace}}/{{pod}}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } }
+        },
+        {
+          "id": 5,
+          "title": "App Pod CPU Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=~\"frontend|backend\", image!=\"\"}[5m])) by (namespace, pod)",
+              "legendFormat": "{{namespace}}/{{pod}}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" } }
+        },
+        {
+          "id": 6,
+          "title": "App Pod Memory Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+          "targets": [
+            {
+              "expr": "sum(container_memory_working_set_bytes{namespace=~\"frontend|backend\", image!=\"\"}) by (namespace, pod)",
+              "legendFormat": "{{namespace}}/{{pod}}"
+            }
+          ],
+          "fieldConfig": { "defaults": { "unit": "bytes" } }
+        }
+      ]
+    }

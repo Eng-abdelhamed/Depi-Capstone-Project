@@ -1,0 +1,54 @@
+replicaCount: 3
+
+image:
+  repository: 797601397904.dkr.ecr.us-east-1.amazonaws.com/backend
+  tag: v0.0.40
+  pullPolicy: IfNotPresent
+
+containerPort: 3000
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: ""
+  path: /api
+  pathType: Prefix
+
+secret:
+  create: false
+  secretName: deploycart-backend-secret
+  
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+readinessProbe:
+  enabled: true
+  path: /
+  initialDelaySeconds: 15
+  periodSeconds: 10
+
+livenessProbe:
+  enabled: true
+  path: /
+  initialDelaySeconds: 30
+  periodSeconds: 20
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+serviceAccount:
+  create: true
+  name: backend-sa
+  automountServiceAccountToken: false
