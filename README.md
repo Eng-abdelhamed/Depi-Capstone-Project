@@ -61,7 +61,7 @@ The repository contains the application CI configuration, Kubernetes CD resource
 
 ## Architecture
 
-![DeployCart Architecture](.Architechtures_pictures/Architechture.png)
+![DeployCart Architecture](architecture-pictures/Architechture.png)
 
 ### High-Level Request Flow
 
@@ -186,11 +186,12 @@ Depi-Capstone-Project/
 │   ├── remote-state configuration
 │   └── infrastructure workflow files
 │
-├── .Architechtures_pictures/
+├── architecture-pictures/
 │   ├── Architechture.png
 │   ├── runningApp.jpeg
 │   ├── Grafana.jpeg
-│   └── GrafanaVisuals.jpeg
+│   ├── GrafanaVisuals.jpeg
+│   └── ArgoCD.jpeg
 │
 └── README.md
 ```
@@ -787,19 +788,19 @@ kubectl -n argocd annotate application <APPLICATION_NAME> \
 
 ### Running Application
 
-![Running DeployCart Application](.Architechtures_pictures/runningApp.jpeg)
+![Running DeployCart Application](architecture-pictures/runningApp.jpeg)
 
 ### Grafana Monitoring Dashboard
 
-![Grafana Monitoring Dashboard](.Architechtures_pictures/Grafana.jpeg)
+![Grafana Monitoring Dashboard](architecture-pictures/Grafana.jpeg)
 
 ### Grafana Cluster Visualizations
 
-![Grafana Cluster Visualizations](.Architechtures_pictures/GrafanaVisuals.jpeg)
+![Grafana Cluster Visualizations](architecture-pictures/GrafanaVisuals.jpeg)
 
 ### Argo CD Dashboard
 
-![Argo CD Interface](.Architechtures/ArgoCD.jpeg)
+![Argo CD Interface](architecture-pictures/ArgoCD.jpeg)
 
 > GitHub image paths are case-sensitive. Keep the image names and folder names exactly the same as they appear in the repository.
 
