@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛒 DeployCart
+#  DeployCart
 ### DEPI Capstone Project
 
 **A production-oriented, cloud-native DevOps pipeline on AWS EKS —**
@@ -21,7 +21,7 @@
 
 <br>
 
-## 📑 Table of Contents
+##  Table of Contents
 
 <table>
 <tr>
@@ -68,7 +68,7 @@
 
 ---
 
-## 🚀 Project Overview
+##  Project Overview
 
 **DeployCart** is a multi-tier Node.js web application deployed through a complete DevOps and GitOps workflow.
 
@@ -76,21 +76,21 @@ The project demonstrates how to:
 
 | | |
 |---|---|
-| 🏗️ | Provision AWS infrastructure using Terraform |
-| 🔍 | Build, scan, and publish Docker images through GitHub Actions |
-| 📦 | Store container images in Amazon ECR |
-| ☸️ | Deploy the frontend and backend to Amazon EKS using Helm |
-| 🔄 | Continuously reconcile Kubernetes resources with Argo CD |
-| 🏷️ | Detect new ECR image versions using Argo CD Image Updater |
-| 🌐 | Expose multiple services through one NGINX Ingress Controller and one AWS Load Balancer |
-| 📊 | Monitor the Kubernetes cluster using Prometheus and Grafana |
-| 🔒 | Apply basic security controls to containers, Kubernetes resources, and the CI/CD workflow |
+|  | Provision AWS infrastructure using Terraform |
+|  | Build, scan, and publish Docker images through GitHub Actions |
+|  | Store container images in Amazon ECR |
+|  | Deploy the frontend and backend to Amazon EKS using Helm |
+|  | Continuously reconcile Kubernetes resources with Argo CD |
+|  | Detect new ECR image versions using Argo CD Image Updater |
+|  | Expose multiple services through one NGINX Ingress Controller and one AWS Load Balancer |
+|  | Monitor the Kubernetes cluster using Prometheus and Grafana |
+|  | Apply basic security controls to containers, Kubernetes resources, and the CI/CD workflow |
 
 > The repository contains the application CI configuration, Kubernetes CD resources, monitoring configuration, and Terraform infrastructure code required to reproduce the environment.
 
 ---
 
-## 🏛️ Architecture
+##  Architecture
 
 <div align="center">
 
@@ -144,7 +144,7 @@ Helm Release on AWS EKS
 
 ---
 
-## ✨ Main Features
+##  Main Features
 
 <table>
 <tr>
@@ -184,31 +184,31 @@ Helm Release on AWS EKS
 
 ---
 
-## 🧰 Technology Stack
+##  Technology Stack
 
 | Area | Technologies |
 |---|---|
-| ☁️ Cloud Provider | AWS |
-| 🏗️ Infrastructure as Code | Terraform |
-| 🐳 Containerization | Docker |
-| 📦 Container Registry | Amazon ECR |
-| ☸️ Container Orchestration | Kubernetes / Amazon EKS |
-| ⛵ Package Management | Helm |
-| 🔁 Continuous Integration | GitHub Actions |
-| 🚢 Continuous Delivery | Argo CD |
-| 🏷️ Image Automation | Argo CD Image Updater |
-| 🛡️ Security Scanning | Trivy |
-| ✅ Code Quality | SonarQube |
-| 🌐 Ingress | NGINX Ingress Controller |
-| 📈 Monitoring | Prometheus |
-| 📊 Visualization | Grafana |
-| 🗄️ State Storage | Amazon S3 |
-| 🟩 Application Runtime | Node.js |
-| 🔀 Version Control | Git and GitHub |
+|  Cloud Provider | AWS |
+|  Infrastructure as Code | Terraform |
+|  Containerization | Docker |
+|  Container Registry | Amazon ECR |
+|  Container Orchestration | Kubernetes / Amazon EKS |
+|  Package Management | Helm |
+|  Continuous Integration | GitHub Actions |
+|  Continuous Delivery | Argo CD |
+|  Image Automation | Argo CD Image Updater |
+|  Security Scanning | Trivy |
+|  Code Quality | SonarQube |
+|  Ingress | NGINX Ingress Controller |
+|  Monitoring | Prometheus |
+|  Visualization | Grafana |
+|  State Storage | Amazon S3 |
+|  Application Runtime | Node.js |
+|  Version Control | Git and GitHub |
 
 ---
 
-## 🗂️ Repository Structure
+##  Repository Structure
 
 ```text
 Depi-Capstone-Project/
@@ -245,7 +245,7 @@ Depi-Capstone-Project/
 └── README.md
 ```
 
-> 💡 The folder name `Terrafrom` is preserved because it matches the current repository structure.
+>  The folder name `Terrafrom` is preserved because it matches the current repository structure.
 
 ### Main Directories
 
@@ -257,9 +257,9 @@ Depi-Capstone-Project/
 
 ---
 
-## 🔄 End-to-End Workflow
+##  End-to-End Workflow
 
-### 1️⃣ Infrastructure Provisioning
+### 1️ Infrastructure Provisioning
 
 1. A developer updates the Terraform code.
 2. The change is pushed to GitHub.
@@ -267,7 +267,7 @@ Depi-Capstone-Project/
 4. Terraform provisions or updates: VPC, public/private subnets, Internet Gateway, NAT Gateways, route tables, Amazon EKS, worker-node resources, Amazon ECR, and IAM roles/policies.
 5. Terraform state is stored remotely in Amazon S3.
 
-### 2️⃣ Continuous Integration
+###  Continuous Integration
 
 1. A developer pushes application code.
 2. GitHub Actions checks out the repository.
@@ -278,7 +278,7 @@ Depi-Capstone-Project/
 7. Docker builds a versioned image.
 8. The image is pushed to Amazon ECR.
 
-### 3️⃣ Continuous Delivery
+###  Continuous Delivery
 
 1. Argo CD monitors the Git repository.
 2. Argo CD Image Updater monitors ECR for valid image tags.
@@ -291,7 +291,7 @@ Depi-Capstone-Project/
 
 ---
 
-## ✅ Prerequisites
+##  Prerequisites
 
 <table>
 <tr>
@@ -341,7 +341,7 @@ aws sts get-caller-identity
 
 ---
 
-## 🏗️ Infrastructure Deployment
+## Infrastructure Deployment
 
 ```bash
 # Move to the infrastructure directory
@@ -377,7 +377,7 @@ kubectl get namespaces
 ```
 
 <details>
-<summary><strong>💣 Destroying the Environment</strong></summary>
+<summary><strong> Destroying the Environment</strong></summary>
 
 <br>
 
@@ -385,13 +385,13 @@ kubectl get namespaces
 terraform destroy
 ```
 
-> ⚠️ Review the destroy plan carefully. This command can remove the EKS cluster, networking resources, and other AWS services managed by Terraform.
+>  Review the destroy plan carefully. This command can remove the EKS cluster, networking resources, and other AWS services managed by Terraform.
 
 </details>
 
 ---
 
-## 🔁 Application CI Pipeline
+##  Application CI Pipeline
 
 ```text
 Checkout → Install dependencies → Run tests → SonarQube analysis
@@ -401,9 +401,9 @@ Checkout → Install dependencies → Run tests → SonarQube analysis
 
 ### Recommended Image Tagging
 
-✅ Use immutable and traceable tags such as `v1.0.0`, `v1.0.1`, `<git-commit-sha>`
+ Use immutable and traceable tags such as `v1.0.0`, `v1.0.1`, `<git-commit-sha>`
 
-❌ Avoid relying only on `latest` — it makes rollback and release identification more difficult.
+ Avoid relying only on `latest` — it makes rollback and release identification more difficult.
 
 ### Required GitHub Secrets
 
@@ -419,7 +419,7 @@ SONAR_HOST_URL
 SONAR_TOKEN
 ```
 
-> 🔐 Prefer GitHub OIDC and short-lived AWS credentials instead of permanent IAM access keys whenever possible.
+>  Prefer GitHub OIDC and short-lived AWS credentials instead of permanent IAM access keys whenever possible.
 
 ---
 
@@ -441,12 +441,12 @@ Argo CD treats Git as the source of truth for Kubernetes resources.
 
 | Status | Meaning |
 |---|---|
-| 🟢 Synced | Live resources match Git |
-| 🟡 OutOfSync | Git and live resources differ |
-| 💚 Healthy | Resources are operating normally |
-| 🔵 Progressing | Deployment is still rolling out |
-| 🔴 Degraded | One or more resources are unhealthy |
-| ⚪ Missing | A required resource does not exist |
+|  Synced | Live resources match Git |
+|  OutOfSync | Git and live resources differ |
+|  Healthy | Resources are operating normally |
+|  Progressing | Deployment is still rolling out |
+|  Degraded | One or more resources are unhealthy |
+|  Missing | A required resource does not exist |
 
 ### Apply Argo CD Applications
 
@@ -465,7 +465,7 @@ kubectl -n argocd annotate application <APPLICATION_NAME> \
 
 ---
 
-## 🌐 Kubernetes Networking
+##  Kubernetes Networking
 
 The frontend and backend are exposed through one NGINX Ingress Controller.
 
@@ -508,7 +508,7 @@ Client → AWS Load Balancer → NGINX Ingress Controller
 
 ---
 
-## 📊 Monitoring and Observability
+##  Monitoring and Observability
 
 The monitoring stack includes:
 
@@ -522,7 +522,7 @@ The monitoring stack includes:
 | **ServiceMonitor** | Prometheus Operator discovery |
 
 <details>
-<summary><strong>📐 Useful PromQL Queries</strong></summary>
+<summary><strong> Useful PromQL Queries</strong></summary>
 
 <br>
 
@@ -566,11 +566,11 @@ When Grafana and Prometheus are in the same Kubernetes cluster, use the internal
 http://<prometheus-service>.<namespace>.svc.cluster.local:9090
 ```
 
-> ⚠️ Do not use `localhost:9090` unless Prometheus runs inside the same Pod.
+>  Do not use `localhost:9090` unless Prometheus runs inside the same Pod.
 
 ---
 
-## 🔒 Security Controls
+##  Security Controls
 
 <table>
 <tr>
@@ -608,11 +608,11 @@ http://<prometheus-service>.<namespace>.svc.cluster.local:9090
 </tr>
 </table>
 
-> ⚠️ **Secret-Management Note:** Kubernetes Secrets are Base64-encoded by default; Base64 is **not** encryption. For production, use AWS Secrets Manager, AWS SSM Parameter Store, External Secrets Operator, Sealed Secrets, or AWS KMS encryption at rest. Never commit real credentials, passwords, tokens, or private keys to Git.
+>  **Secret-Management Note:** Kubernetes Secrets are Base64-encoded by default; Base64 is **not** encryption. For production, use AWS Secrets Manager, AWS SSM Parameter Store, External Secrets Operator, Sealed Secrets, or AWS KMS encryption at rest. Never commit real credentials, passwords, tokens, or private keys to Git.
 
 ---
 
-## 🧪 Validation Commands
+##  Validation Commands
 
 <details>
 <summary><strong>Cluster</strong></summary>
@@ -688,7 +688,7 @@ kubectl rollout status \
 ## 🛠️ Troubleshooting
 
 <details>
-<summary><strong>🔴 CrashLoopBackOff</strong></summary>
+<summary><strong> CrashLoopBackOff</strong></summary>
 
 <br>
 
@@ -703,7 +703,7 @@ kubectl logs -n <NAMESPACE> <POD_NAME> --previous
 </details>
 
 <details>
-<summary><strong>🔴 ImagePullBackOff</strong></summary>
+<summary><strong> ImagePullBackOff</strong></summary>
 
 <br>
 
@@ -716,7 +716,7 @@ kubectl describe pod -n <NAMESPACE> <POD_NAME>
 </details>
 
 <details>
-<summary><strong>🟡 Ingress Returns 404</strong></summary>
+<summary><strong> Ingress Returns 404</strong></summary>
 
 <br>
 
@@ -731,7 +731,7 @@ kubectl logs -n <NAMESPACE> deployment/<DEPLOYMENT_NAME>
 </details>
 
 <details>
-<summary><strong>🟡 Frontend Calls localhost</strong></summary>
+<summary><strong>Frontend Calls localhost</strong></summary>
 
 <br>
 
@@ -754,7 +754,7 @@ docker build \
 </details>
 
 <details>
-<summary><strong>🟡 Grafana Login Fails After Reinstallation</strong></summary>
+<summary><strong> Grafana Login Fails After Reinstallation</strong></summary>
 
 <br>
 
@@ -773,7 +773,7 @@ kubectl -n monitoring exec <GRAFANA_POD> -c grafana -- \
 </details>
 
 <details>
-<summary><strong>🟡 Argo CD Shows OutOfSync</strong></summary>
+<summary><strong> Argo CD Shows OutOfSync</strong></summary>
 
 <br>
 
@@ -795,7 +795,7 @@ kubectl -n argocd annotate application <APPLICATION_NAME> \
 
 ---
 
-## 📸 Screenshots
+##  Screenshots
 
 <div align="center">
 
@@ -809,11 +809,11 @@ kubectl -n argocd annotate application <APPLICATION_NAME> \
 
 </div>
 
-> 💡 GitHub image paths are case-sensitive. Keep the image names and folder names exactly the same as they appear in the repository.
+>  GitHub image paths are case-sensitive. Keep the image names and folder names exactly the same as they appear in the repository.
 
 ---
 
-## 🔮 Future Improvements
+##  Future Improvements
 
 - [ ] Configure a custom domain using Route 53
 - [ ] Enable HTTPS using AWS Certificate Manager and cert-manager
@@ -835,7 +835,7 @@ kubectl -n argocd annotate application <APPLICATION_NAME> \
 
 ---
 
-## 👥 Contributors
+##  Contributors
 
 This project was developed as a capstone project for the **Digital Egypt Pioneers Initiative (DEPI)**.
 
@@ -880,7 +880,7 @@ This project was developed as a capstone project for the **Digital Egypt Pioneer
 
 ---
 
-## 📄 License
+##  License
 
 No license is currently specified.
 
